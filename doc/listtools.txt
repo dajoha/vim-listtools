@@ -1,0 +1,914 @@
+*listtools.txt*   v0.1
+
+A set of tools to get, modify, insert, and join lists of strings.~
+
+Listtools                                       *listtools*
+
+1. INTRODUCTION                                 |listtools-introduction|
+2. QUICK START                                  |listtools-quick-start|
+3. COMMANDS                                     |listtools-commands|
+   3.1 General commands                         |listtools-gen-coms|
+   3.2 Set items in lists                       |listtools-set-coms|
+   3.3 Add items in lists                       |listtools-add-coms|
+   3.4 Remove items from lists                  |listtools-remove-coms|
+   3.5 Operations on multiple lists             |listtools-oper-coms|
+   3.6 Modify items in lists                    |listtools-filter-coms|
+   3.7 Working with the list stack              |listtools-stack-coms|
+   3.8 List range                               |listtools-list-ranges|
+   3.9 Target list                              |listtools-oper-args|
+4. MAPPINGS                                     |listtools-mappings|
+   4.1 Mappings for managing lists              |listtools-manage-mappings|
+   4.2 Mappings for adding elements             |listtools-add-mappings|
+   4.3 Visual mappings for adding elements      |listtools-visual-add-mappings|
+   4.4 Mappings for adding surrounds            |listtools-add-surr-mappings|
+   4.5 Mappings for deleting surrounds          |listtools-del-surr-mappings|
+   4.6 Insert mode/command mode mappings        |listtools-insert-mappings|
+5. OPTIONS                                      |listtools-options|
+6. COMMAND ABBREVIATIONS                        |listtools-abbreviations|
+
+
+==============================================================================
+1. INTRODUCTION                                        *listtools-introduction*
+
+Listtools provides a set of commands, mappings and functions to handle lists
+of strings quickly and easily.
+
+For example it makes this kind of thing easy:
+
+    1. Get a list of matches from a given vim pattern inside a range of line
+
+    2. Insert the found elements elsewhere in a buffer, in a different custom
+       format (for example with each element surrounded with quotes, and
+       separated by commas).
+
+You can also perform some set operations on the lists, like union,
+intersection, extend, filtering, list mapping...
+
+All the lists created with listtools are stored in a unique global variable
+(`g:listtools_lists`); in order to access and/or modify the lists, you have to
+use the mappings, commands and functions described below, instead of directly
+modifying the global variable.
+
+
+==============================================================================
+2. QUICK START                                          *listtools-quick-start*
+
+Open a new buffer and insert the following pseudo-content inside:
+>
+    a = 78
+    b = 120
+    c = 2
+
+Imagine you want to change this code: instead of defining 3 variables, you
+want to pack them into an single array, like this:
+>
+    values = [ 78, 120, 2 ]
+
+You can use listtools to make it quickier to do. First, run the following
+command:
+>
+    :%LTMatch \d\+
+
+The |:LTMatch| command expects a vim pattern, and resets the current list to
+the found matches. In occurence, the matches are 3 numbers.
+
+To view the content of the lists you created, run the |:LTList| command: >
+    :LTList
+    List 0 (3 items) : 78, 120, 2
+
+Now you have the list you need, you may want to insert its content in an
+array-like format. To do so, enter insert mode, and use this key combination:
+
+    <c-r><c-l>[,
+
+The mapping looks hard to remember, but please note that all insert mappings
+for listtools are prefixed by <c-r><c-l>.
+The two last chars indicate a quick format to use; here, we want
+comma-separated elements, surrounded by square brackets, so the last two chars
+are '[' and ',' .
+
+For example, type the following: >
+    values = <c-r><c-l>[,
+It resolves to: >
+    values = [ 78, 120, 2 ]
+
+You can try other insert mappings like:
+    <c-r><c-l>,
+    <c-r><c-l>('
+    <c-r><c-l>((
+
+Before inserting the list content, you can modify and filter the list in many
+ways; for example, to add some elements on the fly: >
+    :LTAdd 45 65
+To remove elements which match a given pattern: >
+    :LTUnmatch .*2.*
+The two above commands executed in the same order will result in the following
+list: >
+    List 0 (3 items) : 78, 45, 65
+
+You can work with several lists by using the |:LTNew|, |:LTSwapNext|,
+|:LTSwapPrev|, or |:LTSwap| commands.
+
+You can make operations involving multiple lists like union, difference... For
+example, first initialize three new lists with the following commands: >
+    :LTDelete *                    " <-- Erase what has been done so far
+    :LTSet one two three four      " <-- Set the first list with 4 elements
+    :LTNew three four five         " <-- Create a 2nd list with 3 elements
+    :LTNew four one six seven      " <-- Create a 3rd list with 4 elements
+To perform the union of these 3 lists into a (+) new one, run the following
+command: >
+    :LTUnion + 0 1 2               " <-- The plus sign (+) indicates that a
+                                   "     new list has to be created
+or more concisely, if there is no other list: >
+    :LTUnion + *
+Then the lists will now look like this: >
+    List 0 (4 items) : one, two, three, four
+    List 1 (3 items) : three, four, five
+    List 2 (4 items) : four, one, six, seven
+    List 3 (7 items) : one, two, three, four, five, six, seven
+
+Finally, you can insert/retrieve the elements from a list one by one, by
+"popping" the elements one by one. For example, first run the command: >
+    :LTSet one two three four
+Then enter insert mode, go to an empty line, and press <c-r><c-l><c-p>. The
+first element, "one", is inserted. Press <c-r><c-l><c-p> again: the 2nd
+element, "two", is inserted.
+If you want to insert again the last popped element ("two", in occurence),
+press <c-r><c-l><c-l>. The 2nd element, "two", will be inserted again.
+To reset the list ("unpop" all elements) to its initial stack state, run the
+following command: >
+    :LTReset
+Or press:
+    <c-r><c-l>lr in insert mode.
+
+
+==============================================================================
+3. COMMANDS                                                *listtools-commands*
+
+3.1 General commands                                       *listtools-gen-coms*
+====================
+
+------------------------------------------------------------------------------
+:LTList [N1 [N2 [... Nn]]]                                            *:LTList*
+
+Display the content of all the lists (or the given list ranges).
+See |listtools-list-ranges| for more details about the N arguments.
+
+------------------------------------------------------------------------------
+:LTNew [{item1} [{item2} [... {item-n}]]]                              *:LTNew*
+
+Create a new list and select it.
+If no argument is given, the list is created empty.
+If some arguments are given, the list is initialized to the given list of
+strings.
+
+------------------------------------------------------------------------------
+:LTDelete [N1 [N2 [... Nn]]]                                        *:LTDelete*
+
+Delete the current list (or the given list ranges).
+See |listtools-list-ranges| for more details about the N arguments.
+
+Examples: >
+    :LTDelete       " delete the current list
+    :LTDelete 0 2   " delete lists 0 and 2
+    :LTDelete *     " delete all the lists
+
+------------------------------------------------------------------------------
+:LTSwap N                                                             *:LTSwap*
+
+Swap to list N.
+See |listtools-list-arg| for more details about the N arguments.
+
+------------------------------------------------------------------------------
+:LTSwapNext [N]                                                   *:LTSwapNext*
+
+Swap to the N-th next list. N defaults to 1. The movement is cyclic (it does
+go back to the beginning when it reaches the end).
+
+------------------------------------------------------------------------------
+:LTSwapPrev [N]                                                   *:LTSwapPrev*
+
+Swap to the N-th previous list. N defaults to 1. The movement is cyclic (it
+does go to the end when it reaches the beginning).
+
+
+3.2 Set items in lists                                     *listtools-set-coms*
+======================
+
+------------------------------------------------------------------------------
+:LTSet[! {list-range}] {item1} [{item2} [... {item-n}]]                *:LTSet*
+
+Reset the current list (or the given list range) to the given list of items.
+
+------------------------------------------------------------------------------
+:[range]LTMatch[! {list-range}] {pattern}                            *:LTMatch*
+
+Search {pattern} in the current buffer, and reset the current list (or the
+given list range) to the list of all the matches. Doubloon items are removed.
+If [range] is given, search only in the given lines.
+
+------------------------------------------------------------------------------
+:LTLet[! {list-range}] {vim-expr}                                      *:LTLet*
+
+Set the current list (or the given list range) to the list evaluated within
+{vim-expr}. The expression must be a list of strings.
+
+
+3.3 Add items in lists                                     *listtools-add-coms*
+======================
+
+------------------------------------------------------------------------------
+:LTAdd[! {list-range}] {item1} [{item2} [... {item-n}]]                *:LTAdd*
+
+Add the given items (simple strings) to the current list (or to the given list
+range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:[range]LTMatchAdd[! {list-range}] {pattern}                      *:LTMatchAdd*
+
+Same as |:LTMatch|, but add the matches to the list(s), keeping old items,
+instead of resetting the list(s).
+See |listtools-list-ranges| for more details about {list-range}.
+
+
+3.4 Remove items from lists                             *listtools-remove-coms*
+===========================
+
+------------------------------------------------------------------------------
+:LTEmpty [N1 [N2 [... Nn]]]                                          *:LTEmpty*
+
+Clear the content of the current list (or the given list ranges).
+See |listtools-list-ranges| for more details about the N arguments.
+
+------------------------------------------------------------------------------
+:LTUnset[! {list-range}] {item1} [{item2} [... {item-n}]]            *:LTUnset*
+
+Remove the given items (simple strings) from the current list (or from the
+given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTUnmatch[! {list-range}] {pattern}                               *:LTUnmatch*
+
+Remove all the items where {pattern} matches from the current list (or from
+the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTKeepmatch[! {list-range}] {pattern}                           *:LTKeepmatch*
+
+Keep only the items where {pattern} matches in the current list (or from the
+given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTUniq[! {list-range}]                                               *:LTUniq*
+
+Remove doubloons in the current list (or in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTFilter[! {list-range}] {filter-expr}                             *:LTFilter*
+
+Filter the current list (or the given list range) like |filter()| with its 2nd
+argument as a string.
+As with |filter()|, use |v:val| to refer to the value of the current item.
+
+Example: >
+    :LTSet ceci n'est pas une pipe
+    :LTFilter len(v:val) >= 4
+
+The resulting list is: >
+    List 0 (3 items) : ceci, n'est, pipe
+
+See |listtools-list-ranges| for more details about {list-range}.
+
+
+3.5 Operations on multiple lists                          *listtools-oper-coms*
+================================
+
+------------------------------------------------------------------------------
+:LTExtend[! {target-list}] [+] {list1} [... {list-n}]               *:LTExtend*
+
+Extend some lists.
+See |listtools-oper-args| for arguments details.
+
+------------------------------------------------------------------------------
+:LTUnion[! {target-list}] [+] {list1} [... {list-n}]                 *:LTUnion*
+
+Perform a union operation between several lists.
+See |listtools-oper-args| for arguments details.
+
+------------------------------------------------------------------------------
+:LTIntersect[! {target-list}] [+] {list1} [... {list-n}]         *:LTIntersect*
+
+Perform an intersection operation between several lists.
+See |listtools-oper-args| for arguments details.
+
+------------------------------------------------------------------------------
+:LTDifference[! {target-list}] [+] {list1} [... {list-n}]       *:LTDifference*
+
+Perform a difference operation between {list1} and all other given lists.
+See |listtools-oper-args| for arguments details.
+
+
+3.6 Modify items in lists                               *listtools-filter-coms*
+=========================
+
+------------------------------------------------------------------------------
+:LTMap[! {list-range}] {filter-expr}                                   *:LTMap*
+
+Map the current list (or the given list range) like |map()| with its 2nd
+argument as a string.
+Like with |map()|, use |v:val| to refer to the value of the current item.
+The result of the map expression must be a string (even if this is not
+checked for efficiency).
+
+Example: >
+    :LTSet a big string
+    :LTMap printf('Here were %i chars', len(v:val))
+The resulting list is: >
+    List 0 (3 items) : Here were 1 chars, Here were 3 chars, Here were 6 chars
+
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTPrefix[! {list-range}] {prefix}                                  *:LTPrefix*
+
+Add the string {prefix} to the beginning of each item in the current list (or
+in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTSuffix[! {list-range}] {suffix}                                  *:LTSuffix*
+
+Add the string {suffix} to the end of each item in the current list (or in the
+given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTSurround[! {list-range}] {prefix} {suffix}                     *:LTSurround*
+
+Add the strings {prefix} and {suffix} to each item bounds, in the current list
+(or in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTDelPrefix[! {list-range}] {prefix}                            *:LTDelPrefix*
+
+Delete the string {prefix} from the beginning of each item in the current list
+(or in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTDelSuffix[! {list-range}] {suffix}                            *:LTDelSuffix*
+
+Delete the string {suffix} from the end of each item in the current list (or
+in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTDelSurround[! {list-range}] {prefix} {suffix}               *:LTDelSurround*
+
+Delete the strings {prefix} and {suffix} from each item in the current list
+(or in the given list range).
+See |listtools-list-ranges| for more details about {list-range}.
+
+
+3.7 Working with the list stack                          *listtools-stack-coms*
+===============================
+
+------------------------------------------------------------------------------
+:LTPop [{list-range}]                                                  *:LTPop*
+
+Pop an element in the current list (or in the given list range). Yank
+automatically the element into registers @" and @*.
+See |listtools-list-ranges| for more details about {list-range}.
+
+------------------------------------------------------------------------------
+:LTReset [N1 [N2 [... Nn]]]                                          *:LTReset*
+
+Reset the initial stack state of the current list (or the given list ranges).
+See |:LTPop| for more details.
+See |listtools-list-ranges| for more details about the N arguments.
+
+
+3.8 List range                                          *listtools-list-ranges*
+==============
+
+Many commands above accept a list range; it means that these commands can
+perform their job by targetting multiple lists.
+
+Quick examples of list ranges:
+    1,2,3  => targets lists 1, 2 et 3
+    *      => targets all the lists
+    %      => targets the current list (usually not needed)
+    %,2    => targets the current list and the list 2
+
+Keep in mind that list numbers are zero-based.
+
+List ranges can used in two ways, depending of which kind of command is run:
+
+    - if the command does NOT accept any other argument (like |:LTReset|), the
+      list ranges are just given as-is, and can even be separated as multiple
+      arguments with spaces. For example the 2 following commands are
+      equivalent and will reset the lists 1 and 2:
+      >
+        :LTReset 1,2
+        :LTReset 1 2
+<
+    - if the command DOES accept other arguments (like |:LTSet|), then you
+      need to use a <bang> in order to specify a list range. If no <bang> if
+      given, the command will always work on the current list. If a <bang> is
+      given the range list must separate its elements by commas (,), not by
+      spaces in order to know where the other arguments start.
+      For example,
+      >
+        :LTSet foo bar       " <-- Set the current list to ['foo','bar']
+        :LTSet! % foo bar    " <-- The same, but more verbosely
+        :LTSet! 0,2 foo bar  " <-- Set the lists 0 and 2 to ['foo','bar']
+        :LTSet! * A B C      " <-- Set all the existing lists to ['A','B','C']
+
+
+3.9 Target list for operations on multiple lists          *listtools-oper-args*
+================================================
+
+This paragraph explains how to choose the target list where to apply the
+results computed by the following commands:
+
+    :LTExtend[! {target-list}] [+] {list1} [... {list-n}]
+    :LTUnion[! {target-list}] [+] {list1} [... {list-n}]
+    :LTIntersect[! {target-list}] [+] {list1} [... {list-n}]
+    :LTDifference[! {target-list}] [+] {list1} [... {list-n}]
+
+There are three ways to use these commands:
+
+   1. If no {target-list} and no plus sign (+) is given, the target list will
+      be the current list. For example, if the current list is 0 and we have 2
+      lists like this:
+>
+          List 0 (3 items) : 1, 2, 3     <-- current list
+          List 1 (3 items) : 7, 8, 9
+
+          :LTExtend 1
+<
+          will extend the list 0 with the content of list 1:
+>
+          List 0 (6 items) : 1, 2, 3, 7, 8, 9
+          List 1 (3 items) : 7, 8, 9
+<
+   2. If a plus sign (+) is given as the very first argument, then a new list
+      will be created and will become the target list:
+>
+          List 0 (3 items) : 1, 2, 3
+          List 1 (3 items) : 7, 8, 9
+
+          :LTExtend + 0 1
+<
+          will create list 2 and perform the operation into it:
+>
+          List 0 (3 items) : 1, 2, 3
+          List 1 (3 items) : 7, 8, 9
+          List 2 (6 items) : 1, 2, 3, 7, 8, 9
+<
+
+   3. If a <bang> is given, then a existing list number is expected as the
+   very first argument, which will be used as the target list:
+>
+          List 0 (3 items) : 1, 2, 3
+          List 1 (3 items) : 7, 8, 9
+          List 2 (2 items) : foo, bar    <-- we want to target this list
+
+          :LTExtend! 2  0 1
+<
+          will extend list 2 with lists 0 and 1:
+>
+          List 0 (3 items) : 1, 2, 3
+          List 1 (3 items) : 7, 8, 9
+          List 2 (8 items) : foo, bar, 1, 2, 3, 7, 8, 9
+<
+
+
+==============================================================================
+4. MAPPINGS                                                *listtools-mappings*
+
+<leader>l{n}
+    Swap to the list with index {n}, starting from 0.
+
+
+4.1 Mappings for managing lists                     *listtools-manage-mappings*
+===============================
+
+<leader>lr    <Plug>ListtoolsResetCur
+    Reset the stack index of the current list, after elements have been
+    popped.
+
+<leader>lR    <Plug>ListtoolsResetAll
+    Reset the stack indexes of all the lists.
+
+<leader>ll    <Plug>ListtoolsListAll
+    List the content of all the lists.
+
+<leader>lL    <Plug>ListtoolsListCur
+    List the content of the current list.
+
+<leader>lp    <Plug>ListtoolsPop
+    Pop an element in the current list. The element is not really lost; just
+    reset the list in order to recover all popped elements.
+
+<leader>le    <Plug>ListtoolsEmptyCur
+    Empty the content of the current list. All the content of the list is
+    lost.
+
+<leader>lE    <Plug>ListtoolsEmptyAll
+    Empty the content of all the existant lists. Lists stay alive, but their
+    content is lost.
+
+<leader>lx    <Plug>ListtoolsDeleteCur
+    Delete the current list.
+
+<leader>lX    <Plug>ListtoolsDeleteAll
+    Delete all the lists. An empty list is created, for further operations.
+
+<leader>lw    <Plug>ListtoolsSwapNext
+    Swap to the next list.
+
+<leader>lW    <Plug>ListtoolsSwapPrev
+    Swap to the previous list.
+
+<leader>ln    <Plug>ListtoolsNewList
+    Create a new list, and swap to it.
+
+<leader>lu    <Plug>ListtoolsUniqCur
+    Remove doubloon elements from the current list.
+
+<leader>lU    <Plug>ListtoolsUniqAll
+    Remove doubloon elements from all the lists.
+
+
+4.2 Mappings for adding elements                       *listtools-add-mappings*
+================================
+
+<leader>la{motion}
+    Add the {motion} text as a new element in the current list.
+
+<leader>law    <Plug>ListtoolsAddCWord
+    Add the current word as a new element in the current list.
+    It's just a shortcut for: <leader>laiw
+
+
+4.3 Visual mappings for adding elements         *listtools-visual-add-mappings*
+=======================================
+
+{visual}<leader>la
+    Add the selected text as a new element in the current list.
+
+
+4.4 Mappings for adding surrounds                 *listtools-add-surr-mappings*
+=================================
+
+The following mappings add surrounds around each element of the current list:
+
+<leader>ls
+    Interactively ask for surrounds to add around each element.
+
+<leader>l'
+    Add single quotes.
+
+<leader>l"
+    Add double quotes.
+
+<leader>l`
+    Add backticks.
+
+<leader>l)
+    Add parentheses.
+
+<leader>l(
+    Add parentheses, with outer spaces.
+
+<leader>l>
+    Add angle brackets.
+
+<leader>l<
+    Add angle brackets, with outer spaces.
+
+<leader>l]
+    Add square brackets.
+
+<leader>l[
+    Add square brackets, with outer spaces.
+
+<leader>l}
+    Add curly brackets.
+
+<leader>l{
+    Add curly brackets, with outer spaces.
+
+
+4.5 Mappings for deleting surrounds               *listtools-del-surr-mappings*
+===================================
+
+The following mappings delete surrounds around each element of the current
+list, is present:
+
+<leader>lds
+    Interactively ask for surrounds to remove.
+
+<leader>ld<space>
+    Trim spaces around each element.
+
+<leader>ld'
+    Delete single quotes.
+
+<leader>ld"
+    Delete double quotes.
+
+<leader>ld`
+    Delete backticks.
+
+<leader>ld(     <leader>ld)
+    Delete parentheses.
+
+<leader>ld<     <leader>ld>
+    Delete angle brackets.
+
+<leader>ld[     <leader>ld]
+    Delete square brackets.
+
+<leader>ld{     <leader>ld}
+    Delete curly brackets.
+
+
+4.6 Insert mode and command mode mappings           *listtools-insert-mappings*
+=========================================
+                                                   *listtools-command-mappings*
+
+    <c-r><c-l><c-p>    <c-r><c-l>p
+    Insert and pop an element from the current list.
+
+    <c-r><c-l><c-l>    <c-r><c-l>l
+    Insert the last popped element from the current list.
+
+    <c-r><c-l>w    <c-r><c-l><c-w>
+    Swap to the next list (like the |:LTSwapNext| command).
+
+    <c-r><c-l>W
+    Swap to the previous list (like the |:LTSwapPrev| command).
+
+
+The following insert mappings are very useful: they insert the whole current
+list, with a specific format for each of them; a single example is given for
+each mapping, to illustrate the format used.
+
+For some mappings (those containing the key 'j'), the special string `<??>`
+means a string which is asked interactively to the user.
+
+    <c-r><c-l>j    <c-r><c-l><c-j> >
+    item1<??>item2<??>item3
+<
+    <c-r><c-l><space> >
+    item1 item2 item3
+<
+    <c-r><c-l>, >
+    item1, item2, item3
+<
+    <c-r><c-l>; >
+    item1; item2; item3
+<
+    <c-r><c-l><cr> >
+    item1
+    item2
+    item3
+<
+    <c-r><c-l>" >
+    "item1", "item2", "item3"
+<
+    <c-r><c-l>' >
+    'item1', 'item2', 'item3'
+<
+    <c-r><c-l>` >
+    `item1`, `item2`, `item3`
+<
+    <c-r><c-l>|
+    Useful for vim searches: >
+    \v<item1>|<item2>|<item3>
+<
+    <c-r><c-l>(j >
+    ( item1<??>item2<??>item3 )
+<
+    <c-r><c-l>((    <c-r><c-l>(, >
+    ( item1, item2, item3 )
+<
+    <c-r><c-l>(; >
+    ( item1; item2; item3 )
+<
+    <c-r><c-l>('    <c-r><c-l>("    <c-r><c-l>(`     >
+    ( 'item1', 'item2', 'item3' )
+<
+    <c-r><c-l>)j >
+    (item1<??>item2<??>item3)
+<
+    <c-r><c-l>))    <c-r><c-l>), >
+    (item1, item2, item3)
+<
+    <c-r><c-l>); >
+    (item1; item2; item3)
+<
+    <c-r><c-l>)'    <c-r><c-l>)"    <c-r><c-l>)` >
+    ('item1', 'item2', 'item3')
+<
+    <c-r><c-l>(<cr>    <c-r><c-l>)<cr> >
+    (
+        item1,
+        item2,
+        item3
+    )
+<
+    <c-r><c-l>[j >
+    [ item1<??>item2<??>item3 ]
+<
+    <c-r><c-l>[[ >
+    [ item1, item2, item3 ]
+<
+    <c-r><c-l>[, >
+    [ item1, item2, item3 ]
+<
+    <c-r><c-l>[; >
+    [ item1; item2; item3 ]
+<
+    <c-r><c-l>[' >
+    [ 'item1', 'item2', 'item3' ]
+<
+    <c-r><c-l>[" >
+    [ "item1", "item2", "item3" ]
+<
+    <c-r><c-l>[` >
+    [ `item1`, `item2`, `item3` ]
+<
+    <c-r><c-l>]j >
+    [item1<??>item2<??>item3]
+<
+    <c-r><c-l>]] >
+    [item1, item2, item3]
+<
+    <c-r><c-l>], >
+    [item1, item2, item3]
+<
+    <c-r><c-l>]; >
+    [item1; item2; item3]
+<
+    <c-r><c-l>]' >
+    ['item1', 'item2', 'item3']
+<
+    <c-r><c-l>]" >
+    ["item1", "item2", "item3"]
+<
+    <c-r><c-l>]` >
+    [`item1`, `item2`, `item3`]
+<
+    <c-r><c-l>[<cr>    <c-r><c-l>]<cr> >
+    [
+        item1,
+        item2,
+        item3
+    ]
+<
+    <c-r><c-l>{j >
+    { item1<??>item2<??>item3 }
+<
+    <c-r><c-l>{{ >
+    { item1, item2, item3 }
+<
+    <c-r><c-l>{, >
+    { item1, item2, item3 }
+<
+    <c-r><c-l>{; >
+    { item1; item2; item3 }
+<
+    <c-r><c-l>{' >
+    { 'item1', 'item2', 'item3' }
+<
+    <c-r><c-l>{" >
+    { "item1", "item2", "item3" }
+<
+    <c-r><c-l>{` >
+    { `item1`, `item2`, `item3` }
+<
+    <c-r><c-l>}j >
+    {item1<??>item2<??>item3}
+<
+    <c-r><c-l>}} >
+    {item1, item2, item3}
+<
+    <c-r><c-l>}, >
+    {item1, item2, item3}
+<
+    <c-r><c-l>}; >
+    {item1; item2; item3}
+<
+    <c-r><c-l>}' >
+    {'item1', 'item2', 'item3'}
+<
+    <c-r><c-l>}" >
+    {"item1", "item2", "item3"}
+<
+    <c-r><c-l>}` >
+    {`item1`, `item2`, `item3`}
+<
+    <c-r><c-l>{<cr>    <c-r><c-l>}<cr> >
+    {
+        item1,
+        item2,
+        item3
+    }
+<
+
+==============================================================================
+5. OPTIONS                                                  *listtools-options*
+
+    g:listtools_leader                                     *g:listtools_leader*
+        Set the normal-mode leader key.
+        The default value is: '<leader>l'
+
+    g:listtools_visual_leader                       *g:listtools_visual_leader*
+        Set the visual-mode leader key.
+        The default value is: g:listtools_leader
+
+    g:listtools_insert_leader                       *g:listtools_insert_leader*
+        Set the insert-mode leader key.
+        The default value is: '<c-r><c-l>'
+
+    g:listtools_command_leader                     *g:listtools_command_leader*
+        Set the command-mode leader key.
+        The default value is: g:listtools_insert_leader
+
+    g:listtools_enable_mappings                   *g:listtools_enable_mappings*
+        Enable all the mappings described in this help, based on the given
+        leaders.
+        The default value is: 1
+
+    g:listtools_enable_abbr                           *g:listtools_enable_abbr*
+        Enable predefined abbreviations.
+        The default value is: 0
+
+    g:listtools_abbr_prefix                           *g:listtools_abbr_prefix*
+        When abbreviations are enabled, prefix to use for each one.
+        The default value is: 'lt'
+
+    g:listtools_verbose                                   *g:listtools_verbose*
+        Enable messages.
+        The default value is: 1
+
+
+==============================================================================
+6. COMMAND ABBREVIATIONS                              *listtools-abbreviations*
+
+By default, command abbreviations are disabled. You can activate them by
+setting the following option in your .vimrc:
+>
+    let g:listtools_enable_abbr = 1
+
+All listtools abbreviations begin with the same prefix, by default: `lt`. You
+can change this prefix by setting the following option in your .vimrc:
+>
+    let g:listtools_abbr_prefix = 'foo'
+
+Here is a list of the default abbreviations (with the default prefix):
+
+    :ltn     |:LTNew|
+    :ltr     |:LTReset|
+    :lte     |:LTEmpty|
+    :ltd     |:LTDelete|
+    :ltl     |:LTList|
+    :ltla    |:LTList|
+    :ltp     |:LTPop|
+    :ltsw    |:LTSwap|
+    :ltsn    |:LTSwapNext|
+    :ltsp    |:LTSwapPrev|
+    :lts     |:LTSet|
+    :ltset   |:LTSet|
+    :ltlet   |:LTLet|
+    :lta     |:LTAdd|
+    :ltus    |:LTUnset|
+    :ltum    |:LTUnmatch|
+    :ltkm    |:LTKeepmatch|
+    :ltm     |:LTMatch|
+    :ltma    |:LTMatchAdd|
+    :ltf     |:LTFilter|
+    :ltmap   |:LTMap|
+    :ltu     |:LTUniq|
+    :ltsur   |:LTSurround|
+    :ltsuf   |:LTSuffix|
+    :ltpre   |:LTPrefix|
+    :ltdsur  |:LTDelSurround|
+    :ltdsuf  |:LTDelSuffix|
+    :ltdpre  |:LTDelPrefix|
+    :ltext   |:LTExtend|
+    :ltuni   |:LTUnion|
+    :ltint   |:LTIntersect|
+    :ltdif   |:LTDifference|
+
+==============================================================================
+vim:tw=78:sw=4:ts=4:et:ft=help:norl:
