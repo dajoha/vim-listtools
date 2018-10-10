@@ -930,11 +930,11 @@ means a string which is asked interactively to the user.
         leaders.
         The default value is: 1
 
-    g:listtools_enable_abbr                           *g:listtools_enable_abbr*
+    g:listtools_enable_cabbr                         *g:listtools_enable_cabbr*
         Enable predefined abbreviations.
         The default value is: 0
 
-    g:listtools_abbr_prefix                           *g:listtools_abbr_prefix*
+    g:listtools_cabbr_prefix                         *g:lcisttools_abbr_prefix*
         When abbreviations are enabled, prefix to use for each one.
         The default value is: 'lt'
 
@@ -949,12 +949,12 @@ means a string which is asked interactively to the user.
 By default, command abbreviations are disabled. You can activate them by
 setting the following option in your .vimrc:
 >
-    let g:listtools_enable_abbr = 1
+    let g:listtools_enable_cabbr = 1
 
 All listtools abbreviations begin with the same prefix, by default: `lt`. You
 can change this prefix by setting the following option in your .vimrc:
 >
-    let g:listtools_abbr_prefix = 'foo'
+    let g:listtools_cabbr_prefix = 'foo'
 
 Here is a list of the default abbreviations (with the default prefix):
 

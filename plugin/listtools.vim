@@ -34,10 +34,10 @@ call s:default('g:listtools_command_leader', g:listtools_insert_leader)
 " Enable default mappings by default:
 call s:default('g:listtools_enable_mappings', 1)
 
-" Disable abbreviations by default:
-call s:default('g:listtools_enable_abbr', 0)
-" When abbreviations are enabled, prefix to use for each one:
-call s:default('g:listtools_abbr_prefix', 'lt')
+" Disable command abbreviations by default:
+call s:default('g:listtools_enable_cabbr', 0)
+" When command abbreviations are enabled, prefix to use for each one:
+call s:default('g:listtools_cabbr_prefix', 'lt')
 
 " Enable messages by default:
 call s:default('g:listtools_verbose', 1)
@@ -46,7 +46,7 @@ call s:default('g:listtools_verbose', 1)
 
 " ABBREVIATIONS:
 
-if g:listtools_enable_abbr  " Disabled by default
+if g:listtools_enable_cabbr  " Disabled by default
 	" The first element of each pair is not the actual abbr, but only its suffix:
 	let s:abbrs = [
 		\ [ 'n'   , 'LTNew'         ], [ 'r'   , 'LTReset'     ], [ 'e'   , 'LTEmpty'     ], [ 'd'  , 'LTDelete'     ],
@@ -66,7 +66,7 @@ if g:listtools_enable_abbr  " Disabled by default
 	\ ]
 
 	for s:abbr in s:abbrs
-		exe 'cabbr' g:listtools_abbr_prefix.s:abbr[0] s:abbr[1]
+		exe 'cabbr' g:listtools_cabbr_prefix.s:abbr[0] s:abbr[1]
 	endfor
 endif
 
