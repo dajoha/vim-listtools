@@ -87,9 +87,9 @@ The two last chars indicate a quick format to use; here, we want
 comma-separated elements, surrounded by square brackets, so the last two chars
 are '[' and ',' .
 
-For example, type the following: >
+For example, if you type the following: >
     values = <c-r><c-l>[,
-It resolves to: >
+it will resolve to: >
     values = [ 78, 120, 2 ]
 
 You can try other insert mappings like:
@@ -97,31 +97,48 @@ You can try other insert mappings like:
     <c-r><c-l>('
     <c-r><c-l>((
 
+Modifying the list
+------------------
+
 Before inserting the list content, you can modify and filter the list in many
 ways; for example, to add some elements on the fly: >
+
     :LTAdd 45 65
+
 To remove elements which match a given pattern: >
+
     :LTUnmatch .*2.*
+
 The two above commands executed in the same order will result in the following
 list: >
+
     List 0 (3 items) : 78, 45, 65
+
+Working with multiple lists
+---------------------------
 
 You can work with several lists by using the |:LTNew|, |:LTSwapNext|,
 |:LTSwapPrev|, or |:LTSwap| commands.
 
 You can make operations involving multiple lists like union, difference... For
 example, first initialize three new lists with the following commands: >
+
     :LTDelete *                    " <-- Erase what has been done so far
     :LTSet one two three four      " <-- Set the first list with 4 elements
     :LTNew three four five         " <-- Create a 2nd list with 3 elements
     :LTNew four one six seven      " <-- Create a 3rd list with 4 elements
+
 To perform the union of these 3 lists into a (+) new one, run the following
+
 command: >
     :LTUnion + 0 1 2               " <-- The plus sign (+) indicates that a
                                    "     new list has to be created
 or more concisely, if there is no other list: >
+
     :LTUnion + *
+
 Then the lists will now look like this: >
+
     List 0 (4 items) : one, two, three, four
     List 1 (3 items) : three, four, five
     List 2 (4 items) : four, one, six, seven
@@ -129,7 +146,9 @@ Then the lists will now look like this: >
 
 Finally, you can insert/retrieve the elements from a list one by one, by
 "popping" the elements one by one. For example, first run the command: >
+
     :LTSet one two three four
+
 Then enter insert mode, go to an empty line, and press <c-r><c-l><c-p>. The
 first element, "one", is inserted. Press <c-r><c-l><c-p> again: the 2nd
 element, "two", is inserted.
@@ -137,9 +156,10 @@ If you want to insert again the last popped element ("two", in occurence),
 press <c-r><c-l><c-l>. The 2nd element, "two", will be inserted again.
 To reset the list ("unpop" all elements) to its initial stack state, run the
 following command: >
+
     :LTReset
-Or press:
-    <c-r><c-l>lr in insert mode.
+
+or in insert mode, press <c-r><c-l>lr.
 
 
 ==============================================================================
@@ -154,6 +174,8 @@ Or press:
 Display the content of all the lists (or the given list ranges).
 See |listtools-list-ranges| for more details about the N arguments.
 
+Abbreviation: `:ltl`
+
 ------------------------------------------------------------------------------
 :LTNew [{item1} [{item2} [... {item-n}]]]                              *:LTNew*
 
@@ -162,11 +184,15 @@ If no argument is given, the list is created empty.
 If some arguments are given, the list is initialized to the given list of
 strings.
 
+Abbreviation: `:ltn`
+
 ------------------------------------------------------------------------------
 :LTDelete [N1 [N2 [... Nn]]]                                        *:LTDelete*
 
 Delete the current list (or the given list ranges).
 See |listtools-list-ranges| for more details about the N arguments.
+
+Abbreviation: `:ltd`
 
 Examples: >
     :LTDelete       " delete the current list
@@ -179,17 +205,23 @@ Examples: >
 Swap to list N.
 See |listtools-list-arg| for more details about the N arguments.
 
+Abbreviation: `:ltsw`
+
 ------------------------------------------------------------------------------
 :LTSwapNext [N]                                                   *:LTSwapNext*
 
 Swap to the N-th next list. N defaults to 1. The movement is cyclic (it does
 go back to the beginning when it reaches the end).
 
+Abbreviation: `:ltsn`
+
 ------------------------------------------------------------------------------
 :LTSwapPrev [N]                                                   *:LTSwapPrev*
 
 Swap to the N-th previous list. N defaults to 1. The movement is cyclic (it
 does go to the end when it reaches the beginning).
+
+Abbreviation: `:ltsp`
 
 
 3.2 Set items in lists                                     *listtools-set-coms*
@@ -200,6 +232,8 @@ does go to the end when it reaches the beginning).
 
 Reset the current list (or the given list range) to the given list of items.
 
+Abbreviations: `:ltset`   `:lts`
+
 ------------------------------------------------------------------------------
 :[range]LTMatch[! {list-range}] {pattern}                            *:LTMatch*
 
@@ -207,11 +241,15 @@ Search {pattern} in the current buffer, and reset the current list (or the
 given list range) to the list of all the matches. Doubloon items are removed.
 If [range] is given, search only in the given lines.
 
+Abbreviation: `:ltm`
+
 ------------------------------------------------------------------------------
 :LTLet[! {list-range}] {vim-expr}                                      *:LTLet*
 
 Set the current list (or the given list range) to the list evaluated within
 {vim-expr}. The expression must be a list of strings.
+
+Abbreviation: `:ltlet`
 
 
 3.3 Add items in lists                                     *listtools-add-coms*
@@ -224,12 +262,16 @@ Add the given items (simple strings) to the current list (or to the given list
 range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:lta`
+
 ------------------------------------------------------------------------------
 :[range]LTMatchAdd[! {list-range}] {pattern}                      *:LTMatchAdd*
 
 Same as |:LTMatch|, but add the matches to the list(s), keeping old items,
 instead of resetting the list(s).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltma`
 
 
 3.4 Remove items from lists                             *listtools-remove-coms*
@@ -241,12 +283,16 @@ See |listtools-list-ranges| for more details about {list-range}.
 Clear the content of the current list (or the given list ranges).
 See |listtools-list-ranges| for more details about the N arguments.
 
+Abbreviation: `:lte`
+
 ------------------------------------------------------------------------------
 :LTUnset[! {list-range}] {item1} [{item2} [... {item-n}]]            *:LTUnset*
 
 Remove the given items (simple strings) from the current list (or from the
 given list range).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltus`
 
 ------------------------------------------------------------------------------
 :LTUnmatch[! {list-range}] {pattern}                               *:LTUnmatch*
@@ -255,6 +301,8 @@ Remove all the items where {pattern} matches from the current list (or from
 the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltum`
+
 ------------------------------------------------------------------------------
 :LTKeepmatch[! {list-range}] {pattern}                           *:LTKeepmatch*
 
@@ -262,11 +310,15 @@ Keep only the items where {pattern} matches in the current list (or from the
 given list range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltkm`
+
 ------------------------------------------------------------------------------
 :LTUniq[! {list-range}]                                               *:LTUniq*
 
 Remove doubloons in the current list (or in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltu`
 
 ------------------------------------------------------------------------------
 :LTFilter[! {list-range}] {filter-expr}                             *:LTFilter*
@@ -274,6 +326,8 @@ See |listtools-list-ranges| for more details about {list-range}.
 Filter the current list (or the given list range) like |filter()| with its 2nd
 argument as a string.
 As with |filter()|, use |v:val| to refer to the value of the current item.
+
+Abbreviation: `:ltf`
 
 Example: >
     :LTSet ceci n'est pas une pipe
@@ -294,11 +348,15 @@ See |listtools-list-ranges| for more details about {list-range}.
 Extend some lists.
 See |listtools-oper-args| for arguments details.
 
+Abbreviation: `:ltext`
+
 ------------------------------------------------------------------------------
 :LTUnion[! {target-list}] [+] {list1} [... {list-n}]                 *:LTUnion*
 
 Perform a union operation between several lists.
 See |listtools-oper-args| for arguments details.
+
+Abbreviation: `:ltuni`
 
 ------------------------------------------------------------------------------
 :LTIntersect[! {target-list}] [+] {list1} [... {list-n}]         *:LTIntersect*
@@ -306,11 +364,15 @@ See |listtools-oper-args| for arguments details.
 Perform an intersection operation between several lists.
 See |listtools-oper-args| for arguments details.
 
+Abbreviation: `:ltint`
+
 ------------------------------------------------------------------------------
 :LTDifference[! {target-list}] [+] {list1} [... {list-n}]       *:LTDifference*
 
 Perform a difference operation between {list1} and all other given lists.
 See |listtools-oper-args| for arguments details.
+
+Abbreviation: `:ltdif`
 
 
 3.6 Modify items in lists                               *listtools-filter-coms*
@@ -324,6 +386,8 @@ argument as a string.
 Like with |map()|, use |v:val| to refer to the value of the current item.
 The result of the map expression must be a string (even if this is not
 checked for efficiency).
+
+Abbreviation: `:ltmap`
 
 Example: >
     :LTSet a big string
@@ -340,12 +404,16 @@ Add the string {prefix} to the beginning of each item in the current list (or
 in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltpre`
+
 ------------------------------------------------------------------------------
 :LTSuffix[! {list-range}] {suffix}                                  *:LTSuffix*
 
 Add the string {suffix} to the end of each item in the current list (or in the
 given list range).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltsuf`
 
 ------------------------------------------------------------------------------
 :LTSurround[! {list-range}] {prefix} {suffix}                     *:LTSurround*
@@ -354,12 +422,16 @@ Add the strings {prefix} and {suffix} to each item bounds, in the current list
 (or in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltsur`
+
 ------------------------------------------------------------------------------
 :LTDelPrefix[! {list-range}] {prefix}                            *:LTDelPrefix*
 
 Delete the string {prefix} from the beginning of each item in the current list
 (or in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltdpre`
 
 ------------------------------------------------------------------------------
 :LTDelSuffix[! {list-range}] {suffix}                            *:LTDelSuffix*
@@ -368,12 +440,16 @@ Delete the string {suffix} from the end of each item in the current list (or
 in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltdsuf`
+
 ------------------------------------------------------------------------------
 :LTDelSurround[! {list-range}] {prefix} {suffix}               *:LTDelSurround*
 
 Delete the strings {prefix} and {suffix} from each item in the current list
 (or in the given list range).
 See |listtools-list-ranges| for more details about {list-range}.
+
+Abbreviation: `:ltdsur`
 
 
 3.7 Working with the list stack                          *listtools-stack-coms*
@@ -386,12 +462,16 @@ Pop an element in the current list (or in the given list range). Yank
 automatically the element into registers @" and @*.
 See |listtools-list-ranges| for more details about {list-range}.
 
+Abbreviation: `:ltp`
+
 ------------------------------------------------------------------------------
 :LTReset [N1 [N2 [... Nn]]]                                          *:LTReset*
 
 Reset the initial stack state of the current list (or the given list ranges).
 See |:LTPop| for more details.
 See |listtools-list-ranges| for more details about the N arguments.
+
+Abbreviation: `:ltr`
 
 
 3.8 List range                                          *listtools-list-ranges*
@@ -406,9 +486,9 @@ Quick examples of list ranges:
     %      => targets the current list (usually not needed)
     %,2    => targets the current list and the list 2
 
-Keep in mind that list numbers are zero-based.
+Pleate note that list numbers are zero-based.
 
-List ranges can used in two ways, depending of which kind of command is run:
+List ranges can be used in two ways, depending of which kind of command is run:
 
     - if the command does NOT accept any other argument (like |:LTReset|), the
       list ranges are just given as-is, and can even be separated as multiple
@@ -423,7 +503,8 @@ List ranges can used in two ways, depending of which kind of command is run:
       given, the command will always work on the current list. If a <bang> is
       given the range list must separate its elements by commas (,), not by
       spaces in order to know where the other arguments start.
-      For example,
+
+      For example:
       >
         :LTSet foo bar       " <-- Set the current list to ['foo','bar']
         :LTSet! % foo bar    " <-- The same, but more verbosely
@@ -434,8 +515,8 @@ List ranges can used in two ways, depending of which kind of command is run:
 3.9 Target list for operations on multiple lists          *listtools-oper-args*
 ================================================
 
-This paragraph explains how to choose the target list where to apply the
-results computed by the following commands:
+This paragraph explains how to define the target list (the one where to apply the
+results) used by the following commands:
 
     :LTExtend[! {target-list}] [+] {list1} [... {list-n}]
     :LTUnion[! {target-list}] [+] {list1} [... {list-n}]
