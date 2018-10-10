@@ -963,7 +963,6 @@ Here is a list of the default abbreviations (with the default prefix):
     :lte     |:LTEmpty|
     :ltd     |:LTDelete|
     :ltl     |:LTList|
-    :ltla    |:LTList|
     :ltp     |:LTPop|
     :ltsw    |:LTSwap|
     :ltsn    |:LTSwapNext|

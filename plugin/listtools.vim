@@ -50,7 +50,7 @@ if g:listtools_enable_cabbr  " Disabled by default
 	" The first element of each pair is not the actual abbr, but only its suffix:
 	let s:abbrs = [
 		\ [ 'n'   , 'LTNew'         ], [ 'r'   , 'LTReset'     ], [ 'e'   , 'LTEmpty'     ], [ 'd'  , 'LTDelete'     ],
-		\ [ 'l'   , 'LTList'        ], [ 'la'  , 'LTList'      ],
+		\ [ 'l'   , 'LTList'        ],
 		\ [ 'p'   , 'LTPop'         ],
 		\ [ 'sw'  , 'LTSwap'        ], [ 'sn'  , 'LTSwapNext'  ], [ 'sp'  , 'LTSwapPrev'  ],
 		\ [ 's'   , 'LTSet'         ], [ 'set' , 'LTSet'       ], [ 'let' , 'LTLet'       ], [ 'a'  , 'LTAdd'        ],
