@@ -91,7 +91,7 @@ function! s:get_list_from_arg(arg)
 		let l:list = eval(a:arg)
 		if type(l:list) != v:t_list
 			echoerr "listtools: List expected"
-			return v:none
+			return v:false
 		endif
 		return l:list
 	endif
@@ -134,7 +134,7 @@ function! listtools#commands#list_oper(func_name, oper_name, fargs, bang)
 			endfor
 		else
 			let l:list = s:get_list_from_arg(l:arg)
-			if type(l:list) == v:t_none | return | endif
+			if type(l:list) == v:t_bool | return | endif
 			call add(l:sources, l:list)
 		endif
 	endfor

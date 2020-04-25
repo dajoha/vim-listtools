@@ -241,7 +241,7 @@ endf
 " Returns the last popped item.
 function! listtools#last(...)
 	let l:list_nrs = s:parse_list_range(a:0 > 0 ? a:1 : '%')
-	if empty(l:list_nrs) | return v:none
+	if empty(l:list_nrs) | return v:false
 	elseif len(l:list_nrs) == 1 | return g:listtools_lists[l:list_nrs[0]]['last']
 	else | return map(l:list_nrs, "g:listtools_lists[v:val]['last']")
 	endif
@@ -592,7 +592,7 @@ function! listtools#pop(...)
 		endif
 	endif
 
-	if l:nb_lists == 1 | return len(l:pop_items)>0 ? l:pop_items[0] : v:none
+	if l:nb_lists == 1 | return len(l:pop_items)>0 ? l:pop_items[0] : v:false
 	else | return l:pop_items
 	endif
 endf
